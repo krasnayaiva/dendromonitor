@@ -1,182 +1,132 @@
-// Функции для страницы детализации дерева
 class TreeDetail {
     constructor() {
         this.treeId = this.getTreeIdFromUrl();
         this.treeData = null;
+        console.log('TreeDetail initialized with ID:', this.treeId);
         this.init();
     }
     
-    // Получение ID дерева из URL
     getTreeIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
-        console.log('Tree ID from URL:', id);
-        return id || '1'; // По умолчанию первое дерево
+        return id || '1';
     }
     
-    // Инициализация страницы
     async init() {
-        console.log('Initializing tree detail for ID:', this.treeId);
-        
-        if (!this.treeId) {
-            this.showError('ID дерева не указан');
-            return;
-        }
-        
+        console.log('Starting initialization...');
         await this.loadTreeData();
         this.renderTreeInfo();
         this.setupEventListeners();
     }
     
-    // Загрузка данных о дереве
     async loadTreeData() {
+        console.log('Loading tree data for ID:', this.treeId);
+        
         try {
-            console.log('Loading tree data...');
+            const apiUrl = `/.netlify/functions/trees?id=${this.treeId}`;
+            console.log('Fetching from:', apiUrl);
             
-            const response = await fetch(`/.netlify/functions/trees?id=${this.treeId}`);
+            const response = await fetch(apiUrl);
+            console.log('Response status:', response.status);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('API response:', data);
+            console.log('API response data:', data);
             
-            // Проверяем структуру ответа
-            if (data.tree) {
-                // Ответ для одного дерева
-                this.treeData = data;
-            } else if (data.id) {
-                // Ответ - одно дерево напрямую
-                this.treeData = {
-                    tree: data,
-                    status_history: [],
-                    comments: []
-                };
-            } else {
-                throw new Error('Неверный формат данных');
-            }
-            
-            console.log('Tree data processed:', this.treeData);
+            this.treeData = data;
             
         } catch (error) {
-            console.error('Ошибка загрузки данных:', error);
+            console.error('Error loading tree data:', error);
             // Используем тестовые данные
             this.treeData = this.getSampleTreeData();
             console.log('Using sample data:', this.treeData);
         }
     }
     
-    // Отображение информации о дереве
     renderTreeInfo() {
-        if (!this.treeData || !this.treeData.tree) {
-            console.error('No tree data available');
-            this.showError('Данные о дереве не загружены');
+        console.log('Rendering tree info with data:', this.treeData);
+        
+        if (!this.treeData) {
+            this.showError('Данные не загружены');
             return;
         }
         
-        const tree = this.treeData.tree;
-        console.log('Rendering tree info:', tree);
+        const tree = this.treeData.tree || this.treeData;
         
-        try {
-            // Обновляем заголовки
-            const treeNameElement = document.getElementById('tree-name');
-            const treeSpeciesElement = document.getElementById('tree-species');
-            
-            if (treeNameElement) treeNameElement.textContent = tree.species || 'Дерево';
-            if (treeSpeciesElement) treeSpeciesElement.textContent = tree.species || 'Дерево';
-            
-            // Статус
-            const statusBadge = document.getElementById('status-badge');
-            if (statusBadge) {
-                const currentStatus = this.getCurrentStatus();
-                statusBadge.textContent = this.getStatusText(currentStatus);
-                statusBadge.className = `status-badge ${currentStatus}`;
-            }
-            
-            // Детали
-            this.updateElement('tree-address', tree.address || 'Не указан');
-            this.updateElement('tree-diameter', tree.diameter ? `${tree.diameter} см` : 'Не измерен');
-            this.updateElement('tree-height', tree.height ? `${tree.height} м` : 'Не измерена');
-            this.updateElement('tree-coordinates', 
-                `${tree.latitude?.toFixed(4) || '0'}, ${tree.longitude?.toFixed(4) || '0'}`);
-                
-            // Рендерим остальные секции
-            this.renderStatusHistory();
-            this.loadComments();
-            
-        } catch (error) {
-            console.error('Error rendering tree info:', error);
-            this.showError('Ошибка отображения информации');
+        // Обновляем информацию
+        this.updateElement('tree-name', tree.species || 'Дерево');
+        this.updateElement('tree-species', tree.species || 'Дерево');
+        this.updateElement('tree-address', tree.address || 'Адрес не указан');
+        this.updateElement('tree-diameter', tree.diameter ? `${tree.diameter} см` : 'Не измерен');
+        this.updateElement('tree-height', tree.height ? `${tree.height} м` : 'Не измерена');
+        this.updateElement('tree-coordinates', 
+            `${tree.latitude || '0'}, ${tree.longitude || '0'}`);
+        
+        // Статус
+        const statusBadge = document.getElementById('status-badge');
+        if (statusBadge) {
+            const status = tree.status || 'unknown';
+            statusBadge.textContent = this.getStatusText(status);
+            statusBadge.className = `status-badge ${status}`;
         }
+        
+        // История статусов
+        this.renderStatusHistory();
+        
+        // Комментарии
+        this.loadComments();
     }
     
-    // Вспомогательная функция для безопасного обновления элементов
     updateElement(id, text) {
         const element = document.getElementById(id);
         if (element) {
             element.textContent = text;
         } else {
-            console.warn(`Element with id ${id} not found`);
+            console.warn('Element not found:', id);
         }
     }
     
-    // Отображение истории статусов
     renderStatusHistory() {
         const container = document.getElementById('status-history-list');
-        if (!container) {
-            console.warn('Status history container not found');
-            return;
-        }
+        if (!container) return;
         
-        const statusHistory = this.treeData.status_history || [];
-        console.log('Rendering status history:', statusHistory);
+        const history = this.treeData.status_history || [];
         
-        if (statusHistory.length === 0) {
+        if (history.length === 0) {
             container.innerHTML = '<div class="loading">Нет записей о состоянии</div>';
             return;
         }
         
-        container.innerHTML = statusHistory.map(status => `
-            <div class="status-item ${status.is_future_plan ? 'future-plan' : ''}">
+        container.innerHTML = history.map(item => `
+            <div class="status-item">
                 <div class="status-header">
-                    <span class="status-date">${this.formatDate(status.date_recorded)}</span>
-                    ${status.is_future_plan ? 
-                        '<span class="status-type plan">📅 План</span>' : 
-                        ''}
+                    <span class="status-date">${item.date_recorded || 'Не указана'}</span>
                 </div>
                 <div class="status-value">
-                    <strong>Состояние:</strong> ${this.getStatusText(status.status)}
+                    <strong>Состояние:</strong> ${this.getStatusText(item.status)}
                 </div>
-                ${status.notes ? `
+                ${item.notes ? `
                     <div class="status-notes">
-                        <strong>Заметки:</strong> ${status.notes}
+                        <strong>Заметки:</strong> ${item.notes}
                     </div>
                 ` : ''}
             </div>
         `).join('');
     }
     
-    // Загрузка комментариев
     async loadComments() {
         const container = document.getElementById('comments-list');
-        if (!container) {
-            console.warn('Comments container not found');
-            return;
-        }
+        if (!container) return;
         
         try {
             const response = await fetch(`/.netlify/functions/comments?tree_id=${this.treeId}`);
-            let comments = [];
-            
-            if (response.ok) {
-                comments = await response.json();
-            }
-            
-            console.log('Loaded comments:', comments);
+            const comments = response.ok ? await response.json() : [];
             
             if (comments.length === 0) {
-                container.innerHTML = '<div class="loading">Пока нет сообщений от жителей</div>';
+                container.innerHTML = '<div class="loading">Пока нет сообщений</div>';
                 return;
             }
             
@@ -184,32 +134,25 @@ class TreeDetail {
                 <div class="comment-item">
                     <div class="comment-header">
                         <span class="comment-author">${comment.user_name || 'Аноним'}</span>
-                        <span class="comment-date">${this.formatDateTime(comment.created_at)}</span>
+                        <span class="comment-date">${comment.created_at || ''}</span>
                     </div>
                     <div class="comment-text">${comment.text}</div>
-                    ${comment.contact_email ? `
-                        <div class="comment-contact">📧 ${comment.contact_email}</div>
-                    ` : ''}
                 </div>
             `).join('');
             
         } catch (error) {
-            console.error('Ошибка загрузки комментариев:', error);
+            console.error('Error loading comments:', error);
             container.innerHTML = '<div class="loading">Ошибка загрузки комментариев</div>';
         }
     }
     
-    // Настройка обработчиков событий
     setupEventListeners() {
         const form = document.getElementById('comment-form');
         if (form) {
             form.addEventListener('submit', (e) => this.handleCommentSubmit(e));
-        } else {
-            console.warn('Comment form not found');
         }
     }
     
-    // Обработка отправки комментария
     async handleCommentSubmit(e) {
         e.preventDefault();
         
@@ -223,63 +166,46 @@ class TreeDetail {
             contact_email: formData.get('contact_email') || ''
         };
         
-        if (!commentData.text || !commentData.text.trim()) {
-            alert('Пожалуйста, напишите ваше сообщение');
+        if (!commentData.text?.trim()) {
+            alert('Напишите сообщение');
             return;
         }
         
-        // Блокируем кнопку
         submitBtn.disabled = true;
         submitBtn.textContent = 'Отправка...';
         
         try {
-            const result = await fetch('/.netlify/functions/comments', {
+            const response = await fetch('/.netlify/functions/comments', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tree_id: parseInt(this.treeId),
                     ...commentData
                 })
             });
             
-            const response = await result.json();
+            const result = await response.json();
             
-            if (response.success) {
-                alert('Ваше сообщение успешно отправлено!');
+            if (result.success) {
+                alert('Сообщение отправлено!');
                 form.reset();
-                this.loadComments(); // Перезагружаем комментарии
+                this.loadComments();
             } else {
-                throw new Error(response.error || 'Ошибка отправки');
+                throw new Error(result.error);
             }
             
         } catch (error) {
-            console.error('Ошибка отправки комментария:', error);
-            alert('Ошибка отправки сообщения. Попробуйте еще раз.');
+            alert('Ошибка отправки: ' + error.message);
         } finally {
-            // Разблокируем кнопку
             submitBtn.disabled = false;
             submitBtn.textContent = '📤 Отправить сообщение';
         }
     }
     
-    // Вспомогательные методы
-    getCurrentStatus() {
-        const statusHistory = this.treeData.status_history || [];
-        if (statusHistory.length === 0) {
-            return this.treeData.tree.status || 'unknown';
-        }
-        
-        // Находим последний статус (не план)
-        const currentStatus = statusHistory.find(status => !status.is_future_plan);
-        return currentStatus ? currentStatus.status : statusHistory[0].status;
-    }
-    
     getStatusText(status) {
         const statusMap = {
             'excellent': 'Отличное',
-            'good': 'Хорошее',
+            'good': 'Хорошее', 
             'satisfactory': 'Удовлетворительное',
             'poor': 'Плохое',
             'critical': 'Критическое',
@@ -288,60 +214,38 @@ class TreeDetail {
         return statusMap[status] || 'Неизвестно';
     }
     
-    formatDate(dateString) {
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ru-RU');
-        } catch (e) {
-            return dateString;
-        }
-    }
-    
-    formatDateTime(dateTimeString) {
-        try {
-            const date = new Date(dateTimeString);
-            return date.toLocaleString('ru-RU');
-        } catch (e) {
-            return dateTimeString;
-        }
-    }
-    
     showError(message) {
         const main = document.querySelector('.main');
         if (main) {
             main.innerHTML = `
                 <div class="container">
-                    <div style="text-align: center; padding: 4rem 2rem; color: #666;">
-                        <h2>😔 Ошибка</h2>
+                    <div style="text-align: center; padding: 2rem; color: #666;">
+                        <h2>Ошибка</h2>
                         <p>${message}</p>
-                        <a href="index.html" class="btn" style="display: inline-block; margin-top: 1rem;">
-                            Вернуться на главную
-                        </a>
+                        <a href="index.html" class="btn">На главную</a>
                     </div>
                 </div>
             `;
         }
     }
     
-    // Тестовые данные для демонстрации
     getSampleTreeData() {
         return {
             tree: {
                 id: parseInt(this.treeId),
                 species: 'Дуб',
-                address: 'Примерный адрес расположения',
+                address: 'Красная площадь, 1',
                 latitude: 55.7558,
                 longitude: 37.6176,
-                diameter: 85,
-                height: 25,
+                diameter: 85.5,
+                height: 25.0,
                 status: 'excellent'
             },
             status_history: [
                 {
                     date_recorded: '2024-01-15',
                     status: 'excellent',
-                    notes: 'Дерево в отличном состоянии, признаков болезней нет',
-                    is_future_plan: false
+                    notes: 'Дерево в отличном состоянии'
                 }
             ],
             comments: []
@@ -349,8 +253,7 @@ class TreeDetail {
     }
 }
 
-// Инициализация при загрузке страницы
+// Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Tree detail page loaded');
     new TreeDetail();
 });

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test API Endpoints</h1>
+    
+    <button onclick="testTrees()">Test /trees</button>
+    <button onclick="testTree(1)">Test /trees?id=1</button>
+    
+    <div id="result"></div>
+    
+    <script>
+    async function testTrees() {
+        try {
+            const response = await fetch('/.netlify/functions/trees');
+            const data = await response.json();
+            document.getElementById('result').innerHTML = 
+                '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } catch (error) {
+            document.getElementById('result').innerHTML = 'Error: ' + error;
+        }
+    }
+    
+    async function testTree(id) {
+        try {
+            const response = await fetch('/.netlify/functions/trees?id=' + id);
+            const data = await response.json();
+            document.getElementById('result').innerHTML = 
+                '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } catch (error) {
+            document.getElementById('result').innerHTML = 'Error: ' + error;
+        }
+    }
+    </script>
+</body>
+</html>
