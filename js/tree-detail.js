@@ -2,7 +2,6 @@ class TreeDetail {
     constructor() {
         this.treeId = this.getTreeIdFromUrl();
         this.treeData = null;
-        console.log('TreeDetail initialized with ID:', this.treeId);
         this.init();
     }
     
@@ -13,79 +12,224 @@ class TreeDetail {
     }
     
     async init() {
-        console.log('Starting initialization...');
         await this.loadTreeData();
         this.renderTreeInfo();
         this.setupEventListeners();
     }
     
     async loadTreeData() {
-        console.log('Loading tree data for ID:', this.treeId);
+        // Используем локальные данные вместо API
+        const allTrees = this.getSampleTrees();
+        const treeId = parseInt(this.treeId);
         
-        try {
-            const apiUrl = `/.netlify/functions/trees?id=${this.treeId}`;
-            console.log('Fetching from:', apiUrl);
-            
-            const response = await fetch(apiUrl);
-            console.log('Response status:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        // Находим дерево по ID
+        const tree = allTrees.find(t => t.id === treeId) || allTrees[0];
+        
+        this.treeData = {
+            tree: tree,
+            status_history: this.getStatusHistory(treeId),
+            comments: this.getComments(treeId)
+        };
+        
+        console.log('Loaded tree data:', this.treeData);
+    }
+    
+    getSampleTrees() {
+        return [
+            {
+                id: 1,
+                latitude: 55.7558,
+                longitude: 37.6176,
+                species: 'Дуб',
+                address: 'Красная площадь, 1',
+                diameter: 85.5,
+                height: 25.0,
+                status: 'excellent'
+            },
+            {
+                id: 2,
+                latitude: 55.7520,
+                longitude: 37.6175,
+                species: 'Береза',
+                address: 'ул. Тверская, 10',
+                diameter: 45.2,
+                height: 18.5,
+                status: 'good'
+            },
+            {
+                id: 3,
+                latitude: 55.7500,
+                longitude: 37.6200,
+                species: 'Сосна',
+                address: 'Парк Горького, центральная аллея',
+                diameter: 92.1,
+                height: 30.2,
+                status: 'satisfactory'
+            },
+            {
+                id: 4,
+                latitude: 55.7490,
+                longitude: 37.6150,
+                species: 'Клен',
+                address: 'ул. Большая Дмитровка, 15',
+                diameter: 32.8,
+                height: 12.3,
+                status: 'poor'
+            },
+            {
+                id: 5,
+                latitude: 55.7475,
+                longitude: 37.6225,
+                species: 'Липа',
+                address: 'Чистопрудный бульвар',
+                diameter: 68.7,
+                height: 22.1,
+                status: 'critical'
             }
-            
-            const data = await response.json();
-            console.log('API response data:', data);
-            
-            this.treeData = data;
-            
-        } catch (error) {
-            console.error('Error loading tree data:', error);
-            // Используем тестовые данные
-            this.treeData = this.getSampleTreeData();
-            console.log('Using sample data:', this.treeData);
-        }
+        ];
+    }
+    
+    getStatusHistory(treeId) {
+        const histories = {
+            1: [
+                {
+                    id: 1,
+                    tree_id: 1,
+                    status: 'excellent',
+                    notes: 'Дерево в отличном состоянии, признаков болезней нет',
+                    date_recorded: '2024-01-15',
+                    is_future_plan: false
+                }
+            ],
+            2: [
+                {
+                    id: 2,
+                    tree_id: 2,
+                    status: 'good',
+                    notes: 'Небольшие повреждения коры, требуется наблюдение',
+                    date_recorded: '2024-01-10',
+                    is_future_plan: false
+                }
+            ],
+            3: [
+                {
+                    id: 3,
+                    tree_id: 3,
+                    status: 'satisfactory',
+                    notes: 'Требуется санитарная обрезка сухих веток',
+                    date_recorded: '2024-01-12',
+                    is_future_plan: false
+                }
+            ],
+            4: [
+                {
+                    id: 4,
+                    tree_id: 4,
+                    status: 'poor',
+                    notes: 'Признаки заболевания, требуется лечение',
+                    date_recorded: '2024-01-08',
+                    is_future_plan: false
+                }
+            ],
+            5: [
+                {
+                    id: 5,
+                    tree_id: 5,
+                    status: 'critical',
+                    notes: 'Сильное повреждение ствола, требуется срочный осмотр',
+                    date_recorded: '2024-01-05',
+                    is_future_plan: false
+                }
+            ]
+        };
+        
+        return histories[treeId] || [];
+    }
+    
+    getComments(treeId) {
+        const allComments = {
+            1: [
+                {
+                    id: 1,
+                    tree_id: 1,
+                    user_name: 'Иван Петров',
+                    text: 'Дерево выглядит здоровым и ухоженным. Очень красивое!',
+                    contact_email: 'ivan@example.com',
+                    created_at: '2024-01-20T10:30:00',
+                    is_reviewed: true
+                },
+                {
+                    id: 2,
+                    tree_id: 1,
+                    user_name: 'Мария Сидорова',
+                    text: 'Люблю гулять рядом с этим дубом, он такой величественный!',
+                    contact_email: '',
+                    created_at: '2024-01-18T14:20:00',
+                    is_reviewed: true
+                }
+            ],
+            2: [
+                {
+                    id: 3,
+                    tree_id: 2,
+                    user_name: 'Алексей',
+                    text: 'Заметил, что кора немного повреждена в нижней части',
+                    contact_email: 'alex@example.com',
+                    created_at: '2024-01-19T09:15:00',
+                    is_reviewed: true
+                }
+            ],
+            3: [
+                {
+                    id: 4,
+                    tree_id: 3,
+                    user_name: 'Ольга',
+                    text: 'На сосне появилось много сухих веток, возможно требуется обрезка',
+                    contact_email: 'olga@example.com',
+                    created_at: '2024-01-17T16:45:00',
+                    is_reviewed: true
+                }
+            ]
+        };
+        
+        return allComments[treeId] || [];
     }
     
     renderTreeInfo() {
-        console.log('Rendering tree info with data:', this.treeData);
-        
-        if (!this.treeData) {
-            this.showError('Данные не загружены');
+        if (!this.treeData || !this.treeData.tree) {
+            this.showError('Данные о дереве не загружены');
             return;
         }
         
-        const tree = this.treeData.tree || this.treeData;
+        const tree = this.treeData.tree;
         
         // Обновляем информацию
-        this.updateElement('tree-name', tree.species || 'Дерево');
-        this.updateElement('tree-species', tree.species || 'Дерево');
-        this.updateElement('tree-address', tree.address || 'Адрес не указан');
+        this.updateElement('tree-name', tree.species);
+        this.updateElement('tree-species', tree.species);
+        this.updateElement('tree-address', tree.address);
         this.updateElement('tree-diameter', tree.diameter ? `${tree.diameter} см` : 'Не измерен');
         this.updateElement('tree-height', tree.height ? `${tree.height} м` : 'Не измерена');
         this.updateElement('tree-coordinates', 
-            `${tree.latitude || '0'}, ${tree.longitude || '0'}`);
+            `${tree.latitude.toFixed(4)}, ${tree.longitude.toFixed(4)}`);
         
         // Статус
         const statusBadge = document.getElementById('status-badge');
         if (statusBadge) {
-            const status = tree.status || 'unknown';
-            statusBadge.textContent = this.getStatusText(status);
-            statusBadge.className = `status-badge ${status}`;
+            statusBadge.textContent = this.getStatusText(tree.status);
+            statusBadge.className = `status-badge ${tree.status}`;
         }
         
         // История статусов
         this.renderStatusHistory();
         
         // Комментарии
-        this.loadComments();
+        this.renderComments();
     }
     
     updateElement(id, text) {
         const element = document.getElementById(id);
         if (element) {
             element.textContent = text;
-        } else {
-            console.warn('Element not found:', id);
         }
     }
     
@@ -101,9 +245,12 @@ class TreeDetail {
         }
         
         container.innerHTML = history.map(item => `
-            <div class="status-item">
+            <div class="status-item ${item.is_future_plan ? 'future-plan' : ''}">
                 <div class="status-header">
-                    <span class="status-date">${item.date_recorded || 'Не указана'}</span>
+                    <span class="status-date">${this.formatDate(item.date_recorded)}</span>
+                    ${item.is_future_plan ? 
+                        '<span class="status-type plan">📅 План</span>' : 
+                        ''}
                 </div>
                 <div class="status-value">
                     <strong>Состояние:</strong> ${this.getStatusText(item.status)}
@@ -117,33 +264,29 @@ class TreeDetail {
         `).join('');
     }
     
-    async loadComments() {
+    renderComments() {
         const container = document.getElementById('comments-list');
         if (!container) return;
         
-        try {
-            const response = await fetch(`/.netlify/functions/comments?tree_id=${this.treeId}`);
-            const comments = response.ok ? await response.json() : [];
-            
-            if (comments.length === 0) {
-                container.innerHTML = '<div class="loading">Пока нет сообщений</div>';
-                return;
-            }
-            
-            container.innerHTML = comments.map(comment => `
-                <div class="comment-item">
-                    <div class="comment-header">
-                        <span class="comment-author">${comment.user_name || 'Аноним'}</span>
-                        <span class="comment-date">${comment.created_at || ''}</span>
-                    </div>
-                    <div class="comment-text">${comment.text}</div>
-                </div>
-            `).join('');
-            
-        } catch (error) {
-            console.error('Error loading comments:', error);
-            container.innerHTML = '<div class="loading">Ошибка загрузки комментариев</div>';
+        const comments = this.treeData.comments || [];
+        
+        if (comments.length === 0) {
+            container.innerHTML = '<div class="loading">Пока нет сообщений от жителей</div>';
+            return;
         }
+        
+        container.innerHTML = comments.map(comment => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">${comment.user_name || 'Аноним'}</span>
+                    <span class="comment-date">${this.formatDateTime(comment.created_at)}</span>
+                </div>
+                <div class="comment-text">${comment.text}</div>
+                ${comment.contact_email ? `
+                    <div class="comment-contact">📧 ${comment.contact_email}</div>
+                ` : ''}
+            </div>
+        `).join('');
     }
     
     setupEventListeners() {
@@ -153,11 +296,10 @@ class TreeDetail {
         }
     }
     
-    async handleCommentSubmit(e) {
+    handleCommentSubmit(e) {
         e.preventDefault();
         
         const form = e.target;
-        const submitBtn = form.querySelector('.submit-btn');
         const formData = new FormData(form);
         
         const commentData = {
@@ -166,52 +308,57 @@ class TreeDetail {
             contact_email: formData.get('contact_email') || ''
         };
         
-        if (!commentData.text?.trim()) {
-            alert('Напишите сообщение');
+        if (!commentData.text || !commentData.text.trim()) {
+            alert('Пожалуйста, напишите ваше сообщение');
             return;
         }
         
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Отправка...';
+        // В демо-режиме просто показываем сообщение
+        alert('В демо-режиме комментарии не сохраняются. В реальном приложении здесь будет отправка на сервер.');
+        form.reset();
         
-        try {
-            const response = await fetch('/.netlify/functions/comments', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tree_id: parseInt(this.treeId),
-                    ...commentData
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                alert('Сообщение отправлено!');
-                form.reset();
-                this.loadComments();
-            } else {
-                throw new Error(result.error);
-            }
-            
-        } catch (error) {
-            alert('Ошибка отправки: ' + error.message);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '📤 Отправить сообщение';
+        // Можно добавить комментарий в локальный список
+        this.addDemoComment(commentData);
+    }
+    
+    addDemoComment(commentData) {
+        const newComment = {
+            id: Date.now(),
+            tree_id: parseInt(this.treeId),
+            user_name: commentData.user_name || 'Аноним',
+            text: commentData.text,
+            contact_email: commentData.contact_email || '',
+            created_at: new Date().toISOString(),
+            is_reviewed: true
+        };
+        
+        if (!this.treeData.comments) {
+            this.treeData.comments = [];
         }
+        
+        this.treeData.comments.unshift(newComment);
+        this.renderComments();
     }
     
     getStatusText(status) {
         const statusMap = {
             'excellent': 'Отличное',
-            'good': 'Хорошее', 
+            'good': 'Хорошее',
             'satisfactory': 'Удовлетворительное',
             'poor': 'Плохое',
-            'critical': 'Критическое',
-            'unknown': 'Неизвестно'
+            'critical': 'Критическое'
         };
         return statusMap[status] || 'Неизвестно';
+    }
+    
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU');
+    }
+    
+    formatDateTime(dateTimeString) {
+        const date = new Date(dateTimeString);
+        return date.toLocaleString('ru-RU');
     }
     
     showError(message) {
@@ -219,41 +366,20 @@ class TreeDetail {
         if (main) {
             main.innerHTML = `
                 <div class="container">
-                    <div style="text-align: center; padding: 2rem; color: #666;">
-                        <h2>Ошибка</h2>
+                    <div style="text-align: center; padding: 4rem 2rem; color: #666;">
+                        <h2>😔 Ошибка</h2>
                         <p>${message}</p>
-                        <a href="index.html" class="btn">На главную</a>
+                        <a href="index.html" class="btn" style="display: inline-block; margin-top: 1rem;">
+                            Вернуться на главную
+                        </a>
                     </div>
                 </div>
             `;
         }
     }
-    
-    getSampleTreeData() {
-        return {
-            tree: {
-                id: parseInt(this.treeId),
-                species: 'Дуб',
-                address: 'Красная площадь, 1',
-                latitude: 55.7558,
-                longitude: 37.6176,
-                diameter: 85.5,
-                height: 25.0,
-                status: 'excellent'
-            },
-            status_history: [
-                {
-                    date_recorded: '2024-01-15',
-                    status: 'excellent',
-                    notes: 'Дерево в отличном состоянии'
-                }
-            ],
-            comments: []
-        };
-    }
 }
 
-// Инициализация
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     new TreeDetail();
 });
