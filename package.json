@@ -1,6 +1,6 @@
 {
   "name": "dendromonitor",
   "dependencies": {
-    "sqlite3": "^5.1.6"
+    "better-sqlite3": "^8.5.0"
   }
 }
