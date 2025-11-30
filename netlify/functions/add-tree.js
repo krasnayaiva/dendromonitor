@@ -2,38 +2,28 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: 'Method Not Allowed'
+      body: JSON.stringify({ error: 'Метод не разрешен' })
     };
   }
 
   try {
     const data = JSON.parse(event.body);
     
-    // Здесь можно сохранять в JSON файл или внешнюю БД
-    // Пока просто возвращаем успех
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({
-        success: true,
-        tree_id: Date.now(),
-        tree: data
+        message: "Дерево добавлено успешно",
+        tree: data,
+        id: Date.now() // временный ID
       })
     };
   } catch (error) {
     return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({
-        success: false,
-        error: error.message
-      })
+      statusCode: 400,
+      body: JSON.stringify({ error: "Неверный JSON" })
     };
   }
-};
+}
