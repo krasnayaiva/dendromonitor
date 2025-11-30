@@ -64,7 +64,7 @@ window.setupMapClickHandler = function() {
 // Загрузка деревьев с сервера
 async function loadTrees() {
     try {
-        const response = await fetch('/api/trees.py');
+        const response = await fetch('/.netlify/functions/trees');
         const trees = await response.json();
         
         trees.forEach(tree => {
@@ -74,7 +74,6 @@ async function loadTrees() {
         updateStatistics(trees);
     } catch (error) {
         console.error('Ошибка загрузки деревьев:', error);
-        // Если API не работает, используем тестовые данные
         loadSampleTrees();
     }
 }

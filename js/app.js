@@ -20,6 +20,16 @@ class DendroMonitor {
         }
     }
     
+    async getTree(id) {
+        try {
+            const response = await fetch(`${this.apiBase}/trees?id=${id}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка получения дерева:', error);
+            return null;
+        }
+    }
+    
     async getTrees() {
         try {
             const response = await fetch(`${this.apiBase}/trees`);
@@ -30,22 +40,9 @@ class DendroMonitor {
         }
     }
 
-    
-    // Получение информации о конкретном дереве
-    async getTree(id) {
-        try {
-            const response = await fetch(`${this.apiBase}/trees.py?id=${id}`);
-            return await response.json();
-        } catch (error) {
-            console.error('Ошибка получения дерева:', error);
-            return null;
-        }
-    }
-
-    // Отправка комментария
     async submitComment(treeId, commentData) {
         try {
-            const response = await fetch(`${this.apiBase}/comments.py`, {
+            const response = await fetch(`${this.apiBase}/comments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
