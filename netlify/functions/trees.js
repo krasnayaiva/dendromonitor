@@ -1,131 +1,95 @@
-const sqlite = require('better-sqlite3');
-
-// Путь к базе данных (в Netlify Functions нет постоянного хранилища, используем память)
-let db;
-
-function getDB() {
-  if (!db) {
-    // Используем базу в памяти для демонстрации
-    db = new sqlite(':memory:');
-    initDB(db);
-  }
-  return db;
-}
-
-function initDB(db) {
-  // Создаем таблицы
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS trees (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      latitude REAL NOT NULL,
-      longitude REAL NOT NULL,
-      species TEXT NOT NULL,
-      address TEXT,
-      diameter REAL,
-      height REAL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS tree_status (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      tree_id INTEGER,
-      status TEXT NOT NULL,
-      notes TEXT,
-      date_recorded DATE DEFAULT CURRENT_DATE,
-      is_future_plan BOOLEAN DEFAULT 0,
-      FOREIGN KEY (tree_id) REFERENCES trees (id)
-    )
-  `);
-
-  // Добавляем тестовые данные если таблицы пустые
-  const treeCount = db.prepare('SELECT COUNT(*) as count FROM trees').get();
-  if (treeCount.count === 0) {
-    const testTrees = [
-      [55.7558, 37.6176, 'Дуб', 'Красная площадь, 1', 85.5, 25.0],
-      [55.7520, 37.6175, 'Береза', 'ул. Тверская, 10', 45.2, 18.5],
-      [55.7500, 37.6200, 'Сосна', 'Парк Горького, центральная аллея', 92.1, 30.2],
-    ];
-
-    const insertTree = db.prepare(`
-      INSERT INTO trees (latitude, longitude, species, address, diameter, height) 
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const insertStatus = db.prepare(`
-      INSERT INTO tree_status (tree_id, status, notes) VALUES (?, ?, ?)
-    `);
-
-    testTrees.forEach((tree, index) => {
-      const result = insertTree.run(...tree);
-      insertStatus.run(result.lastInsertRowid, 
-        ['excellent', 'good', 'satisfactory'][index],
-        ['Дерево в отличном состоянии', 'Небольшие повреждения коры', 'Требуется санитарная обрезка'][index]
-      );
-    });
-  }
-}
-
+// Простая версия без базы данных
 exports.handler = async function(event, context) {
-  const db = getDB();
+  const { id } = event.queryStringParameters || {};
   
-  try {
-    const { id } = event.queryStringParameters || {};
-    
-    if (id) {
-      // Получение конкретного дерева
-      const tree = db.prepare(`
-        SELECT * FROM trees WHERE id = ?
-      `).get(id);
+  // Тестовые данные
+  const sampleTrees = [
+    {
+      id: 1,
+      latitude: 55.7558,
+      longitude: 37.6176,
+      species: 'Дуб',
+      address: 'Красная площадь, 1',
+      diameter: 85.5,
+      height: 25.0,
+      status: 'excellent'
+    },
+    {
+      id: 2,
+      latitude: 55.7520,
+      longitude: 37.6175,
+      species: 'Береза',
+      address: 'ул. Тверская, 10',
+      diameter: 45.2,
+      height: 18.5,
+      status: 'good'
+    },
+    {
+      id: 3,
+      latitude: 55.7500,
+      longitude: 37.6200,
+      species: 'Сосна',
+      address: 'Парк Горького, центральная аллея',
+      diameter: 92.1,
+      height: 30.2,
+      status: 'satisfactory'
+    }
+  ];
 
+  try {
+    if (id) {
+      // Поиск конкретного дерева
+      const treeId = parseInt(id);
+      const tree = sampleTrees.find(t => t.id === treeId);
+      
       if (!tree) {
         return {
           statusCode: 404,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ error: 'Tree not found' })
         };
       }
 
-      const statusHistory = db.prepare(`
-        SELECT * FROM tree_status 
-        WHERE tree_id = ? 
-        ORDER BY date_recorded DESC
-      `).all(id);
+      // Тестовая история статусов
+      const statusHistory = [
+        {
+          id: 1,
+          tree_id: treeId,
+          status: tree.status,
+          notes: 'Первоначальная оценка',
+          date_recorded: '2024-01-15',
+          is_future_plan: false
+        }
+      ];
 
-      const comments = db.prepare(`
-        SELECT * FROM comments 
-        WHERE tree_id = ? AND is_reviewed = 1
-        ORDER BY created_at DESC
-      `).all(id);
+      // Тестовые комментарии
+      const comments = [
+        {
+          id: 1,
+          tree_id: treeId,
+          user_name: 'Иван Петров',
+          text: 'Дерево выглядит здоровым и ухоженным',
+          contact_email: 'ivan@example.com',
+          created_at: '2024-01-20T10:30:00',
+          is_reviewed: true
+        }
+      ];
 
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tree,
+          tree: tree,
           status_history: statusHistory,
           comments: comments
         })
       };
     } else {
-      // Получение всех деревьев
-      const trees = db.prepare(`
-        SELECT t.*, ts.status, ts.notes as status_notes
-        FROM trees t
-        LEFT JOIN tree_status ts ON t.id = ts.tree_id
-        WHERE ts.id = (
-          SELECT id FROM tree_status 
-          WHERE tree_id = t.id 
-          ORDER BY date_recorded DESC, id DESC 
-          LIMIT 1
-        )
-        OR ts.id IS NULL
-      `).all();
-
+      // Все деревья
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trees)
+        body: JSON.stringify(sampleTrees)
       };
     }
   } catch (error) {

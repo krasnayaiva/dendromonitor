@@ -30,19 +30,29 @@ class TreeDetail {
     // Загрузка данных о дереве
     async loadTreeData() {
         try {
-            this.treeData = await app.getTree(this.treeId);
+            console.log('Loading tree data for ID:', this.treeId);
+            
+            const response = await fetch(`/.netlify/functions/trees?id=${this.treeId}`);
+            
+            if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            this.treeData = await response.json();
+            
+            console.log('Tree data loaded:', this.treeData);
             
             if (!this.treeData || !this.treeData.tree) {
-                throw new Error('Дерево не найдено');
+            throw new Error('Дерево не найдено');
             }
             
         } catch (error) {
             console.error('Ошибка загрузки данных:', error);
-            this.showError('Не удалось загрузить информацию о дереве');
+            this.showError('Не удалось загрузить информацию о дереве: ' + error.message);
             // Используем тестовые данные
             this.treeData = this.getSampleTreeData();
         }
-    }
+        }
     
     // Отображение информации о дереве
     renderTreeInfo() {
