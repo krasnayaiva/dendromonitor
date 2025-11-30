@@ -15,6 +15,7 @@ class TreeDetail {
         await this.loadTreeData();
         this.renderTreeInfo();
         this.setupEventListeners();
+        this.renderChart(); // Добавляем построение графика
     }
     
     async loadTreeData() {
@@ -65,26 +66,6 @@ class TreeDetail {
                 diameter: 92.1,
                 height: 30.2,
                 status: 'satisfactory'
-            },
-            {
-                id: 4,
-                latitude: 55.7490,
-                longitude: 37.6150,
-                species: 'Клен',
-                address: 'ул. Большая Дмитровка, 15',
-                diameter: 32.8,
-                height: 12.3,
-                status: 'poor'
-            },
-            {
-                id: 5,
-                latitude: 55.7475,
-                longitude: 37.6225,
-                species: 'Липа',
-                address: 'Чистопрудный бульвар',
-                diameter: 68.7,
-                height: 22.1,
-                status: 'critical'
             }
         ];
     }
@@ -97,47 +78,107 @@ class TreeDetail {
                     tree_id: 1,
                     status: 'excellent',
                     notes: 'Дерево в отличном состоянии, признаков болезней нет',
-                    date_recorded: '2024-01-15',
+                    date_recorded: '2024-03-15',
+                    is_future_plan: false
+                },
+                {
+                    id: 2,
+                    tree_id: 1,
+                    status: 'excellent',
+                    notes: 'Регулярный осмотр - всё в порядке',
+                    date_recorded: '2024-01-10',
+                    is_future_plan: false
+                },
+                {
+                    id: 3,
+                    tree_id: 1,
+                    status: 'good',
+                    notes: 'Небольшие повреждения после шторма',
+                    date_recorded: '2023-11-05',
+                    is_future_plan: false
+                },
+                {
+                    id: 4,
+                    tree_id: 1,
+                    status: 'excellent',
+                    notes: 'Плановый осмотр после летнего сезона',
+                    date_recorded: '2023-09-20',
+                    is_future_plan: false
+                },
+                {
+                    id: 5,
+                    tree_id: 1,
+                    status: 'satisfactory',
+                    notes: 'Требуется подкормка после зимы',
+                    date_recorded: '2023-04-15',
                     is_future_plan: false
                 }
             ],
             2: [
                 {
-                    id: 2,
+                    id: 6,
                     tree_id: 2,
                     status: 'good',
                     notes: 'Небольшие повреждения коры, требуется наблюдение',
-                    date_recorded: '2024-01-10',
+                    date_recorded: '2024-03-10',
+                    is_future_plan: false
+                },
+                {
+                    id: 7,
+                    tree_id: 2,
+                    status: 'satisfactory',
+                    notes: 'Обнаружены вредители, проведена обработка',
+                    date_recorded: '2024-01-15',
+                    is_future_plan: false
+                },
+                {
+                    id: 8,
+                    tree_id: 2,
+                    status: 'good',
+                    notes: 'Состояние улучшилось после лечения',
+                    date_recorded: '2023-12-01',
+                    is_future_plan: false
+                },
+                {
+                    id: 9,
+                    tree_id: 2,
+                    status: 'poor',
+                    notes: 'Сильное поражение вредителями',
+                    date_recorded: '2023-10-20',
                     is_future_plan: false
                 }
             ],
             3: [
                 {
-                    id: 3,
+                    id: 10,
                     tree_id: 3,
                     status: 'satisfactory',
                     notes: 'Требуется санитарная обрезка сухих веток',
-                    date_recorded: '2024-01-12',
+                    date_recorded: '2024-03-12',
                     is_future_plan: false
-                }
-            ],
-            4: [
+                },
                 {
-                    id: 4,
-                    tree_id: 4,
+                    id: 11,
+                    tree_id: 3,
+                    status: 'satisfactory',
+                    notes: 'Проведена частичная обрезка',
+                    date_recorded: '2024-01-20',
+                    is_future_plan: false
+                },
+                {
+                    id: 12,
+                    tree_id: 3,
                     status: 'poor',
-                    notes: 'Признаки заболевания, требуется лечение',
-                    date_recorded: '2024-01-08',
+                    notes: 'Много сухих веток после урагана',
+                    date_recorded: '2023-12-05',
                     is_future_plan: false
-                }
-            ],
-            5: [
+                },
                 {
-                    id: 5,
-                    tree_id: 5,
-                    status: 'critical',
-                    notes: 'Сильное повреждение ствола, требуется срочный осмотр',
-                    date_recorded: '2024-01-05',
+                    id: 13,
+                    tree_id: 3,
+                    status: 'good',
+                    notes: 'Плановый осмотр перед зимой',
+                    date_recorded: '2023-10-10',
                     is_future_plan: false
                 }
             ]
@@ -156,37 +197,6 @@ class TreeDetail {
                     text: 'Дерево выглядит здоровым и ухоженным. Очень красивое!',
                     contact_email: 'ivan@example.com',
                     created_at: '2024-01-20T10:30:00',
-                    is_reviewed: true
-                },
-                {
-                    id: 2,
-                    tree_id: 1,
-                    user_name: 'Мария Сидорова',
-                    text: 'Люблю гулять рядом с этим дубом, он такой величественный!',
-                    contact_email: '',
-                    created_at: '2024-01-18T14:20:00',
-                    is_reviewed: true
-                }
-            ],
-            2: [
-                {
-                    id: 3,
-                    tree_id: 2,
-                    user_name: 'Алексей',
-                    text: 'Заметил, что кора немного повреждена в нижней части',
-                    contact_email: 'alex@example.com',
-                    created_at: '2024-01-19T09:15:00',
-                    is_reviewed: true
-                }
-            ],
-            3: [
-                {
-                    id: 4,
-                    tree_id: 3,
-                    user_name: 'Ольга',
-                    text: 'На сосне появилось много сухих веток, возможно требуется обрезка',
-                    contact_email: 'olga@example.com',
-                    created_at: '2024-01-17T16:45:00',
                     is_reviewed: true
                 }
             ]
@@ -226,6 +236,142 @@ class TreeDetail {
         this.renderComments();
     }
     
+    // Добавляем метод для построения графика
+    renderChart() {
+        const canvas = document.getElementById('statusChart');
+        if (!canvas) {
+            console.log('Chart canvas not found');
+            return;
+        }
+        
+        const statusHistory = this.treeData.status_history || [];
+        
+        if (statusHistory.length < 2) {
+            console.log('Not enough data for chart');
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+                chartContainer.innerHTML = '<div class="loading">Недостаточно данных для построения графика (нужно минимум 2 записи)</div>';
+            }
+            return;
+        }
+        
+        console.log('Rendering chart with data:', statusHistory);
+        
+        const statusValues = {
+            'excellent': 5,
+            'good': 4,
+            'satisfactory': 3,
+            'poor': 2,
+            'critical': 1
+        };
+        
+        // Сортируем по дате (от старых к новым)
+        const sortedHistory = [...statusHistory].sort((a, b) => 
+            new Date(a.date_recorded) - new Date(b.date_recorded)
+        );
+        
+        const labels = sortedHistory.map(status => this.formatChartDate(status.date_recorded));
+        const data = sortedHistory.map(status => statusValues[status.status] || 3);
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Убедимся что Chart.js доступен
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded');
+            return;
+        }
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Состояние дерева',
+                    data: data,
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4caf50',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: 1,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                const statusMap = {
+                                    5: 'Отличное',
+                                    4: 'Хорошее',
+                                    3: 'Удовлетворительное',
+                                    2: 'Плохое',
+                                    1: 'Критическое'
+                                };
+                                return statusMap[value] || '';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                const statusMap = {
+                                    5: 'Отличное',
+                                    4: 'Хорошее', 
+                                    3: 'Удовлетворительное',
+                                    2: 'Плохое',
+                                    1: 'Критическое'
+                                };
+                                return `Состояние: ${statusMap[value]}`;
+                            },
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const history = sortedHistory[index];
+                                return history.notes || '';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+    
+    formatChartDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+    
     updateElement(id, text) {
         const element = document.getElementById(id);
         if (element) {
@@ -244,7 +390,12 @@ class TreeDetail {
             return;
         }
         
-        container.innerHTML = history.map(item => `
+        // Сортируем от новых к старым
+        const sortedHistory = [...history].sort((a, b) => 
+            new Date(b.date_recorded) - new Date(a.date_recorded)
+        );
+        
+        container.innerHTML = sortedHistory.map(item => `
             <div class="status-item ${item.is_future_plan ? 'future-plan' : ''}">
                 <div class="status-header">
                     <span class="status-date">${this.formatDate(item.date_recorded)}</span>
@@ -313,11 +464,9 @@ class TreeDetail {
             return;
         }
         
-        // В демо-режиме просто показываем сообщение
         alert('В демо-режиме комментарии не сохраняются. В реальном приложении здесь будет отправка на сервер.');
         form.reset();
         
-        // Можно добавить комментарий в локальный список
         this.addDemoComment(commentData);
     }
     
