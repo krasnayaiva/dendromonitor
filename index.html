@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ДендроМонитор - Система мониторинга деревьев</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="auth-section">
+                    <button id="login-btn" class="login-btn">🔐 Вход для специалистов</button>
+                    <div id="user-info" class="user-info hidden">
+                        <span>👨‍🔬 Специалист</span>
+                        <button id="logout-btn" class="logout-btn">Выйти</button>
+                    </div>
+                </div>
+                <h1 class="logo">🌳 ДендроМонитор</h1>
+                <p class="tagline">Система мониторинга состояния городских деревьев</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main">
+        <div class="container">
+            <!-- Карта -->
+            <section class="map-section">
+                <h2>Карта деревьев</h2>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+                
+                <!-- Легенда -->
+                <div class="legend">
+                    <h3>Легенда состояния деревьев:</h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="color-dot excellent"></span>
+                            <span>Отличное</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot good"></span>
+                            <span>Хорошее</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot satisfactory"></span>
+                            <span>Удовлетворительное</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot poor"></span>
+                            <span>Плохое</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot critical"></span>
+                            <span>Критическое</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Статистика -->
+            <section class="stats-section">
+                <h2>Статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-trees">0</div>
+                        <div class="stat-label">Всего деревьев</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="excellent-trees">0</div>
+                        <div class="stat-label">В отличном состоянии</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="need-care">0</div>
+                        <div class="stat-label">Требуют ухода</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="add-tree-section" class="add-tree-section hidden">
+                <div class="container">
+                    <h2>🌱 Добавить новое дерево</h2>
+                    
+                    <div class="add-form">
+                        <form id="tree-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tree-species">Вид дерева *</label>
+                                    <select id="tree-species" name="species" required>
+                                        <option value="">Выберите вид</option>
+                                        <option value="oak">Дуб</option>
+                                        <option value="birch">Береза</option>
+                                        <option value="pine">Сосна</option>
+                                        <option value="spruce">Ель</option>
+                                        <option value="maple">Клен</option>
+                                        <option value="linden">Липа</option>
+                                        <option value="poplar">Тополь</option>
+                                        <option value="willow">Ива</option>
+                                        <option value="ash">Ясень</option>
+                                        <option value="other">Другое</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tree-address">Адрес *</label>
+                                    <input type="text" id="tree-address" name="address" required 
+                                        placeholder="Улица, дом, ориентир">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tree-latitude">Широта *</label>
+                                    <input type="number" id="tree-latitude" name="latitude" step="0.0001" required
+                                        placeholder="55.7558">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tree-longitude">Долгота *</label>
+                                    <input type="number" id="tree-longitude" name="longitude" step="0.0001" required
+                                        placeholder="37.6173">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tree-diameter">Диаметр ствола (см)</label>
+                                    <input type="number" id="tree-diameter" name="diameter" 
+                                        placeholder="50">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tree-height">Высота (м)</label>
+                                    <input type="number" id="tree-height" name="height" 
+                                        placeholder="15">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-status">Первоначальное состояние *</label>
+                                <select id="tree-status" name="status" required>
+                                    <option value="excellent">Отличное</option>
+                                    <option value="good">Хорошее</option>
+                                    <option value="satisfactory">Удовлетворительное</option>
+                                    <option value="poor">Плохое</option>
+                                    <option value="critical">Критическое</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-notes">Заметки специалиста</label>
+                                <textarea id="tree-notes" name="notes" rows="3" 
+                                        placeholder="Дополнительная информация о дереве..."></textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="submit-btn">✅ Добавить дерево</button>
+                                <button type="button" id="cancel-add-form" class="cancel-btn">❌ Отмена</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="map-instruction">
+                        💡 Кликните на карту выше для автоматического заполнения координат
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- Секция добавления деревьев (только для специалистов) -->
+        <section id="add-tree-section" class="add-tree-section hidden">
+            <div class="container">
+                <h2>🌱 Добавить новое дерево</h2>
+                
+                <div class="add-form">
+                    <form id="tree-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-species">Вид дерева *</label>
+                                <select id="tree-species" name="species" required>
+                                    <option value="">Выберите вид</option>
+                                    <option value="oak">Дуб</option>
+                                    <option value="birch">Береза</option>
+                                    <option value="pine">Сосна</option>
+                                    <option value="spruce">Ель</option>
+                                    <option value="maple">Клен</option>
+                                    <option value="linden">Липа</option>
+                                    <option value="poplar">Тополь</option>
+                                    <option value="willow">Ива</option>
+                                    <option value="ash">Ясень</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-address">Адрес *</label>
+                                <input type="text" id="tree-address" name="address" required 
+                                    placeholder="Улица, дом, ориентир">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-latitude">Широта *</label>
+                                <input type="number" id="tree-latitude" name="latitude" step="0.0001" required
+                                    placeholder="55.7558">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-longitude">Долгота *</label>
+                                <input type="number" id="tree-longitude" name="longitude" step="0.0001" required
+                                    placeholder="37.6173">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-diameter">Диаметр ствола (см)</label>
+                                <input type="number" id="tree-diameter" name="diameter" 
+                                    placeholder="50">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-height">Высота (м)</label>
+                                <input type="number" id="tree-height" name="height" 
+                                    placeholder="15">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tree-status">Первоначальное состояние *</label>
+                            <select id="tree-status" name="status" required>
+                                <option value="excellent">Отличное</option>
+                                <option value="good">Хорошее</option>
+                                <option value="satisfactory">Удовлетворительное</option>
+                                <option value="poor">Плохое</option>
+                                <option value="critical">Критическое</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tree-notes">Заметки специалиста</label>
+                            <textarea id="tree-notes" name="notes" rows="3" 
+                                    placeholder="Дополнительная информация о дереве..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn">✅ Добавить дерево</button>
+                            <button type="button" id="cancel-add-form" class="cancel-btn">❌ Отмена</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="map-instruction">
+                    💡 Кликните на карту выше для автоматического заполнения координат
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 ДендроМонитор. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

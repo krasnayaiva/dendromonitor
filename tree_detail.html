@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Информация о дереве - ДендроМонитор</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" style="text-decoration: none; color: white;">
+                    <h1 class="logo">🌳 ДендроМонитор</h1>
+                </a>
+                <p class="tagline">Информация о дереве</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main">
+        <div class="container">
+            <!-- Хлебные крошки -->
+            <nav class="breadcrumb">
+                <a href="index.html">Главная</a> > 
+                <span id="tree-name">Дерево</span>
+            </nav>
+
+            <!-- Информация о дереве -->
+            <section class="tree-info-section">
+                <div class="tree-header">
+                    <h2 id="tree-species">Загрузка...</h2>
+                    <div class="status-badge" id="status-badge">Неизвестно</div>
+                </div>
+                
+                <div class="tree-details">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <strong>📍 Адрес:</strong>
+                            <span id="tree-address">Загрузка...</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>📏 Диаметр ствола:</strong>
+                            <span id="tree-diameter">Загрузка...</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>📐 Высота:</strong>
+                            <span id="tree-height">Загрузка...</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>🗺️ Координаты:</strong>
+                            <span id="tree-coordinates">Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- График истории состояний -->
+            <section class="chart-section">
+                <h3>📈 История состояний</h3>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </section>
+
+            <!-- История статусов -->
+            <section class="status-history">
+                <h3>📋 История оценок специалистов</h3>
+                <div id="status-history-list">
+                    <div class="loading">Загрузка истории...</div>
+                </div>
+            </section>
+
+            <!-- Форма для комментариев -->
+            <section class="comment-form-section">
+                <h3>💬 Сообщить о проблеме</h3>
+                <div class="comment-form-container">
+                    <form id="comment-form">
+                        <div class="form-group">
+                            <label for="user-name">Ваше имя (необязательно)</label>
+                            <input type="text" id="user-name" name="user_name" placeholder="Аноним">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-email">Email для связи (необязательно)</label>
+                            <input type="email" id="contact-email" name="contact_email" placeholder="example@mail.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="comment-text">Сообщение *</label>
+                            <textarea id="comment-text" name="text" rows="5" 
+                                      placeholder="Опишите проблему, которую вы заметили, или ваши предложения по уходу за деревом..." 
+                                      required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">
+                            📤 Отправить сообщение
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Комментарии пользователей -->
+            <section class="comments-section">
+                <h3>💭 Сообщения от жителей</h3>
+                <div id="comments-list">
+                    <div class="loading">Загрузка комментариев...</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 ДендроМонитор. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script src="js/tree-detail.js"></script>
+</body>
+</html>

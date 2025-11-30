@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель специалиста - ДендроМонитор</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" style="text-decoration: none; color: white;">
+                    <h1 class="logo">🌳 ДендроМонитор</h1>
+                </a>
+                <p class="tagline">Панель специалиста</p>
+            </div>
+        </div>
+        <div class="auth-section">
+            <div class="user-info">
+                <span>👨‍🔬 Специалист</span>
+                <a href="index.html" class="logout-btn">На главную</a>
+                <button id="logout-btn" class="logout-btn">Выйти</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main">
+        <div class="container">
+            <!-- Статистика -->
+            <section class="stats-section">
+                <h2>📊 Общая статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-trees">0</div>
+                        <div class="stat-label">Всего деревьев</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="need-care">0</div>
+                        <div class="stat-label">Требуют ухода</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="new-comments">0</div>
+                        <div class="stat-label">Новые сообщения</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Управление деревьями -->
+            <section class="management-section">
+                <div class="section-header">
+                    <h2>🌱 Управление деревьями</h2>
+                    <button id="show-add-form" class="add-tree-btn">➕ Добавить дерево</button>
+                </div>
+
+                <!-- Форма добавления дерева -->
+                <div id="add-tree-form" class="add-form hidden">
+                    <form id="tree-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-species">Вид дерева *</label>
+                                <select id="tree-species" name="species" required>
+                                    <option value="">Выберите вид</option>
+                                    <option value="oak">Дуб</option>
+                                    <option value="birch">Береза</option>
+                                    <option value="pine">Сосна</option>
+                                    <option value="spruce">Ель</option>
+                                    <option value="maple">Клен</option>
+                                    <option value="linden">Липа</option>
+                                    <option value="poplar">Тополь</option>
+                                    <option value="willow">Ива</option>
+                                    <option value="ash">Ясень</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-address">Адрес *</label>
+                                <input type="text" id="tree-address" name="address" required 
+                                       placeholder="Улица, дом, ориентир">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-latitude">Широта *</label>
+                                <input type="number" id="tree-latitude" name="latitude" step="0.0001" required
+                                       placeholder="55.7558">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-longitude">Долгота *</label>
+                                <input type="number" id="tree-longitude" name="longitude" step="0.0001" required
+                                       placeholder="37.6173">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tree-diameter">Диаметр ствола (см)</label>
+                                <input type="number" id="tree-diameter" name="diameter" 
+                                       placeholder="50">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tree-height">Высота (м)</label>
+                                <input type="number" id="tree-height" name="height" 
+                                       placeholder="15">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tree-status">Первоначальное состояние *</label>
+                            <select id="tree-status" name="status" required>
+                                <option value="excellent">Отличное</option>
+                                <option value="good">Хорошее</option>
+                                <option value="satisfactory">Удовлетворительное</option>
+                                <option value="poor">Плохое</option>
+                                <option value="critical">Критическое</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tree-notes">Заметки специалиста</label>
+                            <textarea id="tree-notes" name="notes" rows="3" 
+                                      placeholder="Дополнительная информация о дереве..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn">✅ Добавить дерево</button>
+                            <button type="button" id="cancel-add-form" class="cancel-btn">❌ Отмена</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Карта для выбора координат -->
+                <div class="map-container">
+                    <div id="map"></div>
+                    <div class="map-instruction">
+                        💡 Кликните на карту для автоматического заполнения координат
+                    </div>
+                </div>
+            </section>
+
+            <!-- Список деревьев -->
+            <section class="trees-list-section">
+                <h2>📋 Список деревьев</h2>
+                <div id="trees-list" class="trees-list">
+                    <div class="loading">Загрузка списка деревьев...</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 ДендроМонитор. Панель специалиста.</p>
+        </div>
+    </footer>
+
+    <!-- Модальное окно для обновления статуса -->
+    <div id="status-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🔄 Обновить состояние дерева</h3>
+            <form id="status-form">
+                <input type="hidden" id="status-tree-id">
+                
+                <div class="form-group">
+                    <label for="update-status">Новое состояние *</label>
+                    <select id="update-status" name="status" required>
+                        <option value="excellent">Отличное</option>
+                        <option value="good">Хорошее</option>
+                        <option value="satisfactory">Удовлетворительное</option>
+                        <option value="poor">Плохое</option>
+                        <option value="critical">Критическое</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="update-notes">Заметки</label>
+                    <textarea id="update-notes" name="notes" rows="3" 
+                              placeholder="Опишите текущее состояние дерева..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="is-future-plan" name="is_future_plan">
+                        📅 Это план на будущее
+                    </label>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="submit" class="modal-btn primary">💾 Сохранить</button>
+                    <button type="button" id="cancel-status" class="modal-btn secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/specialist.js"></script>
+</body>
+</html>
