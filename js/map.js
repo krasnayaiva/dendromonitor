@@ -110,11 +110,11 @@ function addTreeToMap(tree) {
             <h3>${tree.species}</h3>
             <p><strong>Состояние:</strong> ${statusNames[tree.status]}</p>
             <p><strong>Адрес:</strong> ${tree.address}</p>
-            <p><strong>Диаметр:</strong> ${tree.diameter} см</p>
-            <p><strong>Высота:</strong> ${tree.height} м</p>
-            <a href="tree_detail.html?id=${tree.id}" class="btn">Подробнее</a>
+            ${tree.diameter ? `<p><strong>Диаметр:</strong> ${tree.diameter} см</p>` : ''}
+            ${tree.height ? `<p><strong>Высота:</strong> ${tree.height} м</p>` : ''}
+            <a href="tree_detail.html?id=${tree.id}" class="btn" onclick="event.stopPropagation();">Подробнее</a>
         </div>
-    `;
+        `;
     
     marker.bindPopup(popupContent);
 }

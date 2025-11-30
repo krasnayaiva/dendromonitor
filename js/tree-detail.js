@@ -9,11 +9,15 @@ class TreeDetail {
     // Получение ID дерева из URL
     getTreeIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('id') || 1;
+        const id = urlParams.get('id');
+        console.log('Tree ID from URL:', id);
+        return id || '1'; // По умолчанию первое дерево
     }
     
     // Инициализация страницы
     async init() {
+        console.log('Initializing tree detail for ID:', this.treeId);
+        
         if (!this.treeId) {
             this.showError('ID дерева не указан');
             return;
@@ -21,65 +25,112 @@ class TreeDetail {
         
         await this.loadTreeData();
         this.renderTreeInfo();
-        this.renderStatusHistory();
-        this.renderChart();
-        this.loadComments();
         this.setupEventListeners();
     }
     
     // Загрузка данных о дереве
     async loadTreeData() {
         try {
-            console.log('Loading tree data for ID:', this.treeId);
+            console.log('Loading tree data...');
             
             const response = await fetch(`/.netlify/functions/trees?id=${this.treeId}`);
             
             if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            this.treeData = await response.json();
+            const data = await response.json();
+            console.log('API response:', data);
             
-            console.log('Tree data loaded:', this.treeData);
-            
-            if (!this.treeData || !this.treeData.tree) {
-            throw new Error('Дерево не найдено');
+            // Проверяем структуру ответа
+            if (data.tree) {
+                // Ответ для одного дерева
+                this.treeData = data;
+            } else if (data.id) {
+                // Ответ - одно дерево напрямую
+                this.treeData = {
+                    tree: data,
+                    status_history: [],
+                    comments: []
+                };
+            } else {
+                throw new Error('Неверный формат данных');
             }
+            
+            console.log('Tree data processed:', this.treeData);
             
         } catch (error) {
             console.error('Ошибка загрузки данных:', error);
-            this.showError('Не удалось загрузить информацию о дереве: ' + error.message);
             // Используем тестовые данные
             this.treeData = this.getSampleTreeData();
+            console.log('Using sample data:', this.treeData);
         }
-        }
+    }
     
     // Отображение информации о дереве
     renderTreeInfo() {
+        if (!this.treeData || !this.treeData.tree) {
+            console.error('No tree data available');
+            this.showError('Данные о дереве не загружены');
+            return;
+        }
+        
         const tree = this.treeData.tree;
+        console.log('Rendering tree info:', tree);
         
-        // Обновляем заголовки
-        document.getElementById('tree-name').textContent = tree.species;
-        document.getElementById('tree-species').textContent = tree.species;
-        
-        // Статус
-        const statusBadge = document.getElementById('status-badge');
-        const currentStatus = this.getCurrentStatus();
-        statusBadge.textContent = this.getStatusText(currentStatus);
-        statusBadge.className = `status-badge ${currentStatus}`;
-        
-        // Детали
-        document.getElementById('tree-address').textContent = tree.address || 'Не указан';
-        document.getElementById('tree-diameter').textContent = tree.diameter ? `${tree.diameter} см` : 'Не измерен';
-        document.getElementById('tree-height').textContent = tree.height ? `${tree.height} м` : 'Не измерена';
-        document.getElementById('tree-coordinates').textContent = 
-            `${tree.latitude?.toFixed(4) || '0'}, ${tree.longitude?.toFixed(4) || '0'}`;
+        try {
+            // Обновляем заголовки
+            const treeNameElement = document.getElementById('tree-name');
+            const treeSpeciesElement = document.getElementById('tree-species');
+            
+            if (treeNameElement) treeNameElement.textContent = tree.species || 'Дерево';
+            if (treeSpeciesElement) treeSpeciesElement.textContent = tree.species || 'Дерево';
+            
+            // Статус
+            const statusBadge = document.getElementById('status-badge');
+            if (statusBadge) {
+                const currentStatus = this.getCurrentStatus();
+                statusBadge.textContent = this.getStatusText(currentStatus);
+                statusBadge.className = `status-badge ${currentStatus}`;
+            }
+            
+            // Детали
+            this.updateElement('tree-address', tree.address || 'Не указан');
+            this.updateElement('tree-diameter', tree.diameter ? `${tree.diameter} см` : 'Не измерен');
+            this.updateElement('tree-height', tree.height ? `${tree.height} м` : 'Не измерена');
+            this.updateElement('tree-coordinates', 
+                `${tree.latitude?.toFixed(4) || '0'}, ${tree.longitude?.toFixed(4) || '0'}`);
+                
+            // Рендерим остальные секции
+            this.renderStatusHistory();
+            this.loadComments();
+            
+        } catch (error) {
+            console.error('Error rendering tree info:', error);
+            this.showError('Ошибка отображения информации');
+        }
+    }
+    
+    // Вспомогательная функция для безопасного обновления элементов
+    updateElement(id, text) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = text;
+        } else {
+            console.warn(`Element with id ${id} not found`);
+        }
     }
     
     // Отображение истории статусов
     renderStatusHistory() {
         const container = document.getElementById('status-history-list');
+        if (!container) {
+            console.warn('Status history container not found');
+            return;
+        }
+        
         const statusHistory = this.treeData.status_history || [];
+        console.log('Rendering status history:', statusHistory);
         
         if (statusHistory.length === 0) {
             container.innerHTML = '<div class="loading">Нет записей о состоянии</div>';
@@ -106,99 +157,23 @@ class TreeDetail {
         `).join('');
     }
     
-    // Создание графика
-    renderChart() {
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        const statusHistory = this.treeData.status_history || [];
-        
-        if (statusHistory.length === 0) {
-            document.querySelector('.chart-container').innerHTML = 
-                '<div class="loading">Недостаточно данных для построения графика</div>';
-            return;
-        }
-        
-        const statusValues = {
-            'excellent': 5,
-            'good': 4,
-            'satisfactory': 3,
-            'poor': 2,
-            'critical': 1
-        };
-        
-        const labels = statusHistory.map(status => this.formatDate(status.date_recorded));
-        const data = statusHistory.map(status => statusValues[status.status] || 0);
-        const backgroundColors = statusHistory.map(status => 
-            status.is_future_plan ? '#2196f3' : this.getStatusColor(status.status)
-        );
-        
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Состояние дерева',
-                    data: data,
-                    borderColor: '#4caf50',
-                    backgroundColor: backgroundColors,
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointBackgroundColor: backgroundColors,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        min: 0,
-                        max: 5,
-                        ticks: {
-                            callback: function(value) {
-                                const statusMap = {
-                                    5: 'Отличное',
-                                    4: 'Хорошее',
-                                    3: 'Удовлетворительное',
-                                    2: 'Плохое',
-                                    1: 'Критическое'
-                                };
-                                return statusMap[value] || '';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.parsed.y;
-                                const statusMap = {
-                                    5: 'Отличное',
-                                    4: 'Хорошее',
-                                    3: 'Удовлетворительное',
-                                    2: 'Плохое',
-                                    1: 'Критическое'
-                                };
-                                return `Состояние: ${statusMap[value]}`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
     // Загрузка комментариев
     async loadComments() {
         const container = document.getElementById('comments-list');
+        if (!container) {
+            console.warn('Comments container not found');
+            return;
+        }
         
         try {
-            const comments = await app.getComments(this.treeId);
+            const response = await fetch(`/.netlify/functions/comments?tree_id=${this.treeId}`);
+            let comments = [];
+            
+            if (response.ok) {
+                comments = await response.json();
+            }
+            
+            console.log('Loaded comments:', comments);
             
             if (comments.length === 0) {
                 container.innerHTML = '<div class="loading">Пока нет сообщений от жителей</div>';
@@ -227,7 +202,11 @@ class TreeDetail {
     // Настройка обработчиков событий
     setupEventListeners() {
         const form = document.getElementById('comment-form');
-        form.addEventListener('submit', (e) => this.handleCommentSubmit(e));
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleCommentSubmit(e));
+        } else {
+            console.warn('Comment form not found');
+        }
     }
     
     // Обработка отправки комментария
@@ -244,7 +223,7 @@ class TreeDetail {
             contact_email: formData.get('contact_email') || ''
         };
         
-        if (!commentData.text.trim()) {
+        if (!commentData.text || !commentData.text.trim()) {
             alert('Пожалуйста, напишите ваше сообщение');
             return;
         }
@@ -254,19 +233,30 @@ class TreeDetail {
         submitBtn.textContent = 'Отправка...';
         
         try {
-            const result = await app.submitComment(this.treeId, commentData);
+            const result = await fetch('/.netlify/functions/comments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tree_id: parseInt(this.treeId),
+                    ...commentData
+                })
+            });
             
-            if (result.success) {
-                showNotification('Ваше сообщение успешно отправлено!', 'success');
+            const response = await result.json();
+            
+            if (response.success) {
+                alert('Ваше сообщение успешно отправлено!');
                 form.reset();
                 this.loadComments(); // Перезагружаем комментарии
             } else {
-                throw new Error(result.error || 'Ошибка отправки');
+                throw new Error(response.error || 'Ошибка отправки');
             }
             
         } catch (error) {
             console.error('Ошибка отправки комментария:', error);
-            showNotification('Ошибка отправки сообщения. Попробуйте еще раз.', 'error');
+            alert('Ошибка отправки сообщения. Попробуйте еще раз.');
         } finally {
             // Разблокируем кнопку
             submitBtn.disabled = false;
@@ -277,7 +267,9 @@ class TreeDetail {
     // Вспомогательные методы
     getCurrentStatus() {
         const statusHistory = this.treeData.status_history || [];
-        if (statusHistory.length === 0) return 'unknown';
+        if (statusHistory.length === 0) {
+            return this.treeData.tree.status || 'unknown';
+        }
         
         // Находим последний статус (не план)
         const currentStatus = statusHistory.find(status => !status.is_future_plan);
@@ -296,52 +288,53 @@ class TreeDetail {
         return statusMap[status] || 'Неизвестно';
     }
     
-    getStatusColor(status) {
-        const colorMap = {
-            'excellent': '#4caf50',
-            'good': '#8bc34a',
-            'satisfactory': '#ff9800',
-            'poor': '#ff5722',
-            'critical': '#f44336'
-        };
-        return colorMap[status] || '#666';
-    }
-    
     formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU');
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
+        } catch (e) {
+            return dateString;
+        }
     }
     
     formatDateTime(dateTimeString) {
-        const date = new Date(dateTimeString);
-        return date.toLocaleString('ru-RU');
+        try {
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('ru-RU');
+        } catch (e) {
+            return dateTimeString;
+        }
     }
     
     showError(message) {
-        document.querySelector('.main').innerHTML = `
-            <div class="container">
-                <div style="text-align: center; padding: 4rem 2rem; color: #666;">
-                    <h2>😔 Ошибка</h2>
-                    <p>${message}</p>
-                    <a href="index.html" class="btn" style="display: inline-block; margin-top: 1rem;">
-                        Вернуться на главную
-                    </a>
+        const main = document.querySelector('.main');
+        if (main) {
+            main.innerHTML = `
+                <div class="container">
+                    <div style="text-align: center; padding: 4rem 2rem; color: #666;">
+                        <h2>😔 Ошибка</h2>
+                        <p>${message}</p>
+                        <a href="index.html" class="btn" style="display: inline-block; margin-top: 1rem;">
+                            Вернуться на главную
+                        </a>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
     
     // Тестовые данные для демонстрации
     getSampleTreeData() {
         return {
             tree: {
-                id: this.treeId,
+                id: parseInt(this.treeId),
                 species: 'Дуб',
                 address: 'Примерный адрес расположения',
                 latitude: 55.7558,
                 longitude: 37.6176,
                 diameter: 85,
-                height: 25
+                height: 25,
+                status: 'excellent'
             },
             status_history: [
                 {
@@ -349,30 +342,15 @@ class TreeDetail {
                     status: 'excellent',
                     notes: 'Дерево в отличном состоянии, признаков болезней нет',
                     is_future_plan: false
-                },
-                {
-                    date_recorded: '2024-03-01',
-                    status: 'good',
-                    notes: 'Запланировать подкормку на весну',
-                    is_future_plan: true
                 }
-            ]
+            ],
+            comments: []
         };
     }
 }
 
-// Добавляем метод получения комментариев в основной класс
-DendroMonitor.prototype.getComments = async function(treeId) {
-    try {
-        const response = await fetch(`${this.apiBase}/comments.py?tree_id=${treeId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Ошибка получения комментариев:', error);
-        return [];
-    }
-};
-
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Tree detail page loaded');
     new TreeDetail();
 });
